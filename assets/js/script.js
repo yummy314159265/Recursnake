@@ -1,44 +1,55 @@
 const canvas = document.querySelector('#canvas')
 const ctx = canvas.getContext('2d');
 
-let startx = 0;
-let starty = 0;
-let timer;
-let pauseToggle = false;
-let speed = 250;
 let rectTimer;
-let left = 'left';
-let right = 'right';
-let up = 'up';
-let down = 'down';
-let direction = down;
-let pelletPosition;
+
+const left = 'left';
+const right = 'right';
+const up = 'up';
+const down = 'down';
+
 const width = 20;
 const height = 20;
-const gameWidth = 500;
-const gameHeight = 500;
 
-const createPellet = () => {
-    let posx = (Math.floor(Math.random() * (gameWidth/width)) * width) + width/2;
-    let posy = (Math.floor(Math.random() * (gameHeight/height)) * height) + height/2;
+const game = {
+    width: 500,
+    height: 500,
+    paused: false,
+    speed: 150,
+}
 
-    ctx.beginPath();
-    ctx.arc(posx, posy, width/3, 0, 2* Math.PI);
-    ctx.stroke();
-
-    pelletPosition = {
-        x: posx,
-        y: posy
+const snake = {
+    length: 1,
+    startx: 0,
+    starty: 0,
+    direction: down,
+    width: 20,
+    height: 20,
+    isEating: function () { 
+        return (snake.startx < pellet.x && pellet.x < snake.startx + snake.width && snake.starty < pellet.y && pellet.y < snake.starty + snake.height) 
     }
 }
 
+const pellet = {
+    radius: snake.width/3
+}
+
+const createPellet = () => {
+    pellet.x = (Math.floor(Math.random() * (game.width/snake.width)) * snake.width) + snake.width/2;
+    pellet.y = (Math.floor(Math.random() * (game.height/snake.height)) * snake.height) + snake.height/2;
+
+    ctx.beginPath();
+    ctx.arc(pellet.x, pellet.y, pellet.radius, 0, 2* Math.PI);
+    ctx.stroke();
+}
+
 const pause = () => {
-    if (pauseToggle) {
+    if (game.paused) {
         clearInterval(rectTimer);
-        pauseToggle = false;
+        game.paused = false;
     } else {
         unpause(); 
-        pauseToggle = true;
+        game.paused = true;
     }
 }
 
@@ -46,52 +57,52 @@ const moveRectangle = (dir) => {
     
     switch(dir) {
         case down:
-            if (starty < gameHeight-20) { 
-                starty += 20;
+            if (snake.starty < game.height-20) { 
+                snake.starty += 20;
             } else {
-                starty = 0;
+                snake.starty = 0;
             }
             break;
 
         case up:
-            if (starty >= 20) { 
-                starty -= 20;
+            if (snake.starty >= 20) { 
+                snake.starty -= 20;
             } else {
-                starty = gameHeight-20;
+                snake.starty = game.height-20;
             }
             break;
 
         case right:
-            if (startx < gameWidth-20) { 
-                startx += 20;
+            if (snake.startx < game.width-20) { 
+                snake.startx += 20;
             } else {
-                startx = 0;
+                snake.startx = 0;
             }
             break;
 
         case left:
-            if (startx >= 20) { 
-                startx -= 20;
+            if (snake.startx >= 20) { 
+                snake.startx -= 20;
             } else {
-                startx = gameWidth-20;
+                snake.startx = game.width-20;
             }
-    }
-
-    if (startx < pelletPosition.x && pelletPosition.x < startx + width && starty < pelletPosition.y && pelletPosition.y < starty + width) {
-        console.log('eaten');
-        createPellet();
     }
 }
 
 const unpause = () => {
 
     rectTimer = setInterval(() => {
-        ctx.clearRect(startx, starty, width, height)
+        ctx.clearRect(snake.startx, snake.starty, snake.width, snake.height)
         
-        moveRectangle(direction); 
+        moveRectangle(snake.direction); 
+        
+        if (snake.isEating()) {
+            console.log('pellet eaten');
+            createPellet();
+        }
 
-        ctx.fillRect(startx, starty, width, height);
-    }, speed);
+        ctx.fillRect(snake.startx, snake.starty, snake.width, snake.height);
+    }, game.speed);
 
 }
 
@@ -105,25 +116,25 @@ canvas.addEventListener('keydown', (event) => {
     }
 
     if (event.code === 'KeyA') {
-        direction = left;
+        snake.direction = left;
     }
 
     if (event.code === 'KeyW') {
-        direction = up;
+        snake.direction = up;
     }
 
     if (event.code === 'KeyD') {
-        direction = right;
+        snake.direction = right;
     }
 
     if (event.code === 'KeyS') {
-        direction = down;
+        snake.direction = down;
     }
 
 })
 
 const init = () => {
-    ctx.fillRect(startx, starty, width, height); 
+    ctx.fillRect(snake.startx, snake.starty, snake.width, snake.height); 
     createPellet();
 }
 
