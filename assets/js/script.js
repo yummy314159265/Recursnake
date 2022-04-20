@@ -8,14 +8,11 @@ const right = 'right';
 const up = 'up';
 const down = 'down';
 
-const width = 20;
-const height = 20;
-
 const game = {
     width: 500,
     height: 500,
     paused: false,
-    speed: 150,
+    speed: 150
 }
 
 const snake = {
@@ -109,7 +106,6 @@ const unpause = () => {
 canvas.addEventListener('keydown', (event) => {
 
     event.preventDefault();
-
 
     if (event.code === "Space") {
         pause();
