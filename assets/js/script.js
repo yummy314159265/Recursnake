@@ -1,52 +1,91 @@
 const canvas = document.querySelector('#canvas')
 const ctx = canvas.getContext('2d');
 
-let rectTimer;
+let gameTimer;
 
 const left = 'left';
 const right = 'right';
 const up = 'up';
 const down = 'down';
 
+class Snakepart {
+    constructor (startx, starty) {
+        this.startx = startx;
+        this.starty = starty;
+    }
+
+    static width = 20;
+    static height = 20;
+
+    draw() {
+        ctx.fillRect(this.startx, this.starty, Snakepart.width, Snakepart.height); 
+    }
+}
+
 const game = {
     width: 500,
     height: 500,
     paused: false,
-    speed: 150,
+    speed: (1750/60),
+    started: false,
+    score: 0,
     
     pause: function () {
         if (game.paused) {
+            if (!game.started) {
+                game.start();
+            }
             game.run(); 
             game.paused = false;
         } else {
-            clearInterval(rectTimer);
+            clearInterval(gameTimer);
             game.paused = true;
         }
     },
 
     run: function () {
-        rectTimer = setInterval(() => {
-            game.loop();
-        }, game.speed);
+        gameTimer = setInterval(game.loop, game.speed);
     },
 
-    createPellet: function () {
-        pellet.x = (Math.floor(Math.random() * (game.width/snake.width)) * snake.width) + snake.width/2;
-        pellet.y = (Math.floor(Math.random() * (game.height/snake.height)) * snake.height) + snake.height/2;
+    createEgg: function () {
+        egg.x = (Math.floor(Math.random() * (game.width/snake.width)) * snake.width) + snake.width/2;
+        egg.y = (Math.floor(Math.random() * (game.height/snake.height)) * snake.height) + snake.height/2;
     
         ctx.beginPath();
-        ctx.arc(pellet.x, pellet.y, pellet.radius, 0, 2* Math.PI);
+        ctx.arc(egg.x, egg.y, egg.radius, 0, 2* Math.PI);
+        ctx.fillStyle = 'green';
+        ctx.fill();
+        ctx.fillStyle = 'black';
         ctx.stroke();
+
+        egg.count = 1;
     },
 
     loop: function () {
         snake.erase();
-        snake.move(snake.direction); 
+        snake.setPreviousPosition();
+        snake.move(snake.direction);
+
         if (snake.isEating()) {
-            console.log('pellet eaten');
-            game.createPellet();
+            console.log('egg eaten');
+            egg.count--;
+
+            let newPart = new Snakepart(snake.previousx, snake.previousy);
+            newPart.draw();
+            
+            if (egg.count === 0) {
+                setTimeout(game.createEgg, 1000);
+            }
         }
+        
         snake.draw();
+    },
+
+    start: function () {
+        game.started = true;
+        snake.draw()
+        game.createEgg();
+        
     }
 }
 
@@ -54,12 +93,17 @@ const snake = {
     length: 1,
     startx: 0,
     starty: 0,
+    previousx: 0,
+    previousy: 0,
     direction: down,
     width: 20,
     height: 20,
     
     isEating: function () { 
-        return (snake.startx < pellet.x && pellet.x < snake.startx + snake.width && snake.starty < pellet.y && pellet.y < snake.starty + snake.height) 
+        snake.length++;
+        game.score++;
+
+        return (snake.startx < egg.x && egg.x < snake.startx + snake.width && snake.starty < egg.y && egg.y < snake.starty + snake.height) 
     },
 
     draw: function () {
@@ -70,7 +114,13 @@ const snake = {
         ctx.clearRect(snake.startx, snake.starty, snake.width, snake.height)
     },
 
+    setPreviousPosition: function () {
+        snake.previousx = snake.startx;
+        snake.previousy = snake.starty;
+    },
+
     move: function (dir) {
+
         switch(dir) {
             case down:
                 if (snake.starty < game.height-20) { 
@@ -106,7 +156,7 @@ const snake = {
     }
 }
 
-const pellet = {
+const egg = {
     radius: snake.width/3
 }
 
@@ -138,8 +188,6 @@ canvas.addEventListener('keydown', (event) => {
 
 const init = () => {
     game.pause();
-    snake.draw();
-    game.createPellet();
 }
 
 init();
