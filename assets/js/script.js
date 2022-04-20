@@ -8,19 +8,46 @@ const right = 'right';
 const up = 'up';
 const down = 'down';
 
-const snakepartArr = [];
-
 class Snakepart {
     constructor (startx, starty) {
         this.startx = startx;
         this.starty = starty;
+        this.previousx = startx;
+        this.previousy = starty;
     }
 
     static width = 20;
     static height = 20;
+    static snakeparts = [];
 
-    draw() {
+    draw () {
         ctx.fillRect(this.startx, this.starty, Snakepart.width, Snakepart.height); 
+    }
+
+    erase () {
+        ctx.clearRect(this.startx, this.starty, Snakepart.width, Snakepart.height)
+    }
+
+    setPreviousPosition () {
+        this.previousx = this.startx;
+        this.previousy = this.starty;
+    }
+
+    static move () {
+        for(let i = 0; i < Snakepart.snakeparts.length; i++) {
+            Snakepart.snakeparts[i].erase();
+            Snakepart.snakeparts[i].setPreviousPosition();
+
+            if (i === 0) {
+                Snakepart.snakeparts[i].startx = snake.previousx;
+                Snakepart.snakeparts[i].starty = snake.previousy;
+            } else {
+                Snakepart.snakeparts[i].startx = Snakepart.snakeparts[i-1].previousx;
+                Snakepart.snakeparts[i].starty = Snakepart.snakeparts[i-1].previousy;
+            }
+
+            Snakepart.snakeparts[i].draw();
+        }
     }
 }
 
@@ -64,12 +91,13 @@ const game = {
     },
 
     loop: function () {
-        snake.erase();
-        snake.setPreviousPosition();
+
         snake.move(snake.direction);
 
         if (snake.isEating()) {
             console.log('egg eaten');
+            egg.x = null;
+            egg.y = null;
             egg.count--;
 
             snake.createNewPart();
@@ -78,8 +106,8 @@ const game = {
                 setTimeout(game.createEgg, 1000);
             }
         }
-        
-        snake.draw();
+
+        Snakepart.move();
     },
 
     start: function () {
@@ -122,12 +150,14 @@ const snake = {
 
     createNewPart: function () {
         let newPart = new Snakepart(snake.previousx, snake.previousy);
-        newPart.draw();
-        snakepartArr.push(newPart);
-        console.log(snakepartArr);
+        Snakepart.snakeparts.push(newPart);
+        console.log(Snakepart.snakeparts);
     },
 
     move: function (dir) {
+
+        snake.erase();
+        snake.setPreviousPosition();
 
         switch(dir) {
             case down:
@@ -161,6 +191,8 @@ const snake = {
                     snake.startx = game.width-20;
                 }
         }
+
+        snake.draw();
     }
 }
 
