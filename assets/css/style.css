@@ -1,0 +1,19 @@
+body {
+    font-family: 'Roboto', Arial, Helvetica, sans-serif;
+}
+
+canvas {
+    border: 1px solid black;
+    margin: auto;
+    padding: 0;
+}
+
+h1 {
+    color: black;
+    text-align: center;
+    font-size: 30px;
+}
+
+.container {
+    width: fit-content;
+}
