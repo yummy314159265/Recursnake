@@ -8,6 +8,8 @@ const right = 'right';
 const up = 'up';
 const down = 'down';
 
+const snakepartArr = [];
+
 class Snakepart {
     constructor (startx, starty) {
         this.startx = startx;
@@ -70,8 +72,7 @@ const game = {
             console.log('egg eaten');
             egg.count--;
 
-            let newPart = new Snakepart(snake.previousx, snake.previousy);
-            newPart.draw();
+            snake.createNewPart();
             
             if (egg.count === 0) {
                 setTimeout(game.createEgg, 1000);
@@ -117,6 +118,13 @@ const snake = {
     setPreviousPosition: function () {
         snake.previousx = snake.startx;
         snake.previousy = snake.starty;
+    },
+
+    createNewPart: function () {
+        let newPart = new Snakepart(snake.previousx, snake.previousy);
+        newPart.draw();
+        snakepartArr.push(newPart);
+        console.log(snakepartArr);
     },
 
     move: function (dir) {
