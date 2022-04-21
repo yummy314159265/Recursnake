@@ -94,12 +94,17 @@ const game = {
         ctx.fill();
         ctx.fillStyle = 'black';
         ctx.stroke();
-
     },
 
     checkBadSpawn: function () {
         if (egg.x === snake.startx && egg.y === snake.starty) {
             game.createEgg();
+        }
+
+        if (snake.length > 1) {
+            if (egg.x === Snakepart.snakeparts[Snakepart.snakeparts.length -1].previousx && egg.y === Snakepart.snakeparts[Snakepart.snakeparts.length -1].previousy) {
+                game.createEgg();
+            }
         }
 
         for (const snakepart of Snakepart.snakeparts) {
@@ -113,13 +118,12 @@ const game = {
         egg.x = (Math.floor(Math.random() * ((game.width-20)/snake.width)) * snake.width) + snake.width/2;
         egg.y = (Math.floor(Math.random() * ((game.height-20)/snake.height)) * snake.height) + snake.height/2;
         game.checkBadSpawn();
-        console.log(egg.x, egg.y)
-        game.drawEgg();
+        console.log('egg spawned at ' + egg.x, egg.y)
     },
 
     removeEgg: function () {
-        egg.x = null;
-        egg.y = null;
+        egg.x = -50;
+        egg.y = -50;
     },
 
     over: function () {
@@ -151,6 +155,7 @@ const game = {
     loop: function () {
         snake.move(snake.direction);
         Snakepart.move();
+        game.drawEgg();
         game.checkState();
     },
 
