@@ -1,5 +1,10 @@
-const canvas = document.querySelector('#canvas')
+const startDivEl = document.querySelector('#start');
+const startTextEl = document.querySelector('#start-text');
+const gameOverEl = document.querySelector('#game-over');
+const scoreEl = document.querySelector('#score');
+const canvas = document.querySelector('#canvas');
 const ctx = canvas.getContext('2d');
+
 
 let gameTimer;
 
@@ -33,6 +38,10 @@ class Snakepart {
         this.previousy = this.starty;
     }
 
+    static destroyAll () {
+        Snakepart.snakeparts = [];
+    }
+
     static move () {
         for(let i = 0; i < Snakepart.snakeparts.length; i++) {
             Snakepart.snakeparts[i].erase();
@@ -55,7 +64,7 @@ const game = {
     width: 500,
     height: 500,
     paused: false,
-    speed: (1750/60),
+    speed: 2000/60,
     started: false,
     score: 0,
     
@@ -65,9 +74,11 @@ const game = {
                 game.start();
             }
             game.run(); 
+            startDivEl.style.display = 'none';
             game.paused = false;
         } else {
             clearInterval(gameTimer);
+            startDivEl.style.display = 'block';
             game.paused = true;
         }
     },
@@ -76,10 +87,7 @@ const game = {
         gameTimer = setInterval(game.loop, game.speed);
     },
 
-    createEgg: function () {
-        egg.x = (Math.floor(Math.random() * (game.width/snake.width)) * snake.width) + snake.width/2;
-        egg.y = (Math.floor(Math.random() * (game.height/snake.height)) * snake.height) + snake.height/2;
-    
+    drawEgg: function () {
         ctx.beginPath();
         ctx.arc(egg.x, egg.y, egg.radius, 0, 2* Math.PI);
         ctx.fillStyle = 'green';
@@ -87,34 +95,84 @@ const game = {
         ctx.fillStyle = 'black';
         ctx.stroke();
 
-        egg.count = 1;
+    },
+
+    checkBadSpawn: function () {
+        if (egg.x === snake.startx && egg.y === snake.starty) {
+            game.createEgg();
+        }
+
+        for (const snakepart of Snakepart.snakeparts) {
+            if (egg.x === snakepart.startx && egg.y === snakepart.starty) {
+                game.createEgg();
+            }
+        }
+    },
+
+    createEgg: function () {
+        egg.x = (Math.floor(Math.random() * ((game.width-20)/snake.width)) * snake.width) + snake.width/2;
+        egg.y = (Math.floor(Math.random() * ((game.height-20)/snake.height)) * snake.height) + snake.height/2;
+        game.checkBadSpawn();
+        console.log(egg.x, egg.y)
+        game.drawEgg();
+    },
+
+    removeEgg: function () {
+        egg.x = null;
+        egg.y = null;
+    },
+
+    over: function () {
+        clearInterval(gameTimer);
+        scoreEl.textContent = `Score: ${game.score}`
+        gameOverEl.style.display = "block";
+        startTextEl.textContent = 'press space to start';
+        game.started = false;
+    },
+
+    checkState: function () {
+        if (snake.isEating()) {
+            console.log('egg eaten');
+
+            snake.length++;
+            game.score++;
+    
+            game.removeEgg();
+            snake.createNewPart();
+            
+            setTimeout(game.createEgg, 1000);
+        }
+
+        if (snake.hasCollided()) {
+            game.over();
+        }
     },
 
     loop: function () {
-
         snake.move(snake.direction);
-
-        if (snake.isEating()) {
-            console.log('egg eaten');
-            egg.x = null;
-            egg.y = null;
-            egg.count--;
-
-            snake.createNewPart();
-            
-            if (egg.count === 0) {
-                setTimeout(game.createEgg, 1000);
-            }
-        }
-
         Snakepart.move();
+        game.checkState();
+    },
+
+    eraseAll: function () {
+        ctx.clearRect(0, 0, game.width, game.height);
     },
 
     start: function () {
+        startDivEl.style.display = 'none';
+        startTextEl.textContent = 'paused';
         game.started = true;
+        snake.startx = 0;
+        snake.starty = 0;
+        snake.length = 1;
+        game.score = 0;
+        snake.direction = down;
+        scoreEl.textContent = ``
+        gameOverEl.style.display = 'none';
+        Snakepart.destroyAll();
+        game.eraseAll();
         snake.draw()
         game.createEgg();
-        
     }
 }
 
@@ -129,9 +187,6 @@ const snake = {
     height: 20,
     
     isEating: function () { 
-        snake.length++;
-        game.score++;
-
         return (snake.startx < egg.x && egg.x < snake.startx + snake.width && snake.starty < egg.y && egg.y < snake.starty + snake.height) 
     },
 
@@ -147,19 +202,89 @@ const snake = {
         snake.previousx = snake.startx;
         snake.previousy = snake.starty;
     },
+    
+    getPreviousPosition: function () {
+        return [snake.previousx, snake.previousy]
+    },
 
     createNewPart: function () {
-        let newPart = new Snakepart(snake.previousx, snake.previousy);
+
+        let newPart;
+
+        if (snake.length === 2) {
+            newPart = new Snakepart(snake.previousx, snake.previousy);
+        } else {
+            newPart = new Snakepart(Snakepart.snakeparts[Snakepart.snakeparts.length-1].previousx, Snakepart.snakeparts[Snakepart.snakeparts.length-1].previousy);
+        }
+
         Snakepart.snakeparts.push(newPart);
-        console.log(Snakepart.snakeparts);
+    },
+
+    oppositeDir: function (dir) {
+        switch (dir) {
+            case down:
+                return up;
+            case up:
+                return down;
+            case left:
+                return right;
+            case right:
+                return left;
+        }
+    },
+
+    hasCollided: function () {
+        for (const snakepart of Snakepart.snakeparts) {
+            if (snake.startx === snakepart.startx && snake.starty === snakepart.starty) {
+                return true;    
+            }
+        }
+
+        return false;
+    },
+
+    catchBadReverse: function () {
+        switch (snake.direction) {
+            case down:
+                if (snake.starty < game.height-20) { 
+                    snake.starty += 40;
+                } else {
+                    snake.starty = 0;
+                }
+                break;
+    
+            case up:
+                if (snake.starty >= 20) { 
+                    snake.starty -= 40;
+                } else {
+                    snake.starty = game.height-20;
+                }
+                break;
+    
+            case right:
+                if (snake.startx < game.width-20) { 
+                    snake.startx += 40;
+                } else {
+                    snake.startx = 0;
+                }
+                break;
+    
+            case left:
+                if (snake.startx >= 20) { 
+                    snake.startx -= 40;
+                } else {
+                    snake.startx = game.width-20;
+                }
+        }
     },
 
     move: function (dir) {
 
         snake.erase();
+        let previousPos = snake.getPreviousPosition();
         snake.setPreviousPosition();
 
-        switch(dir) {
+        switch (dir) {
             case down:
                 if (snake.starty < game.height-20) { 
                     snake.starty += 20;
@@ -192,6 +317,11 @@ const snake = {
                 }
         }
 
+        if (snake.startx === previousPos[0] &&  snake.starty === previousPos[1]) {
+            snake.direction = snake.oppositeDir(dir);
+            snake.catchBadReverse();
+        }
+
         snake.draw();
     }
 }
@@ -203,24 +333,26 @@ const egg = {
 canvas.addEventListener('keydown', (event) => {
 
     event.preventDefault();
+    const opposite = snake.oppositeDir(snake.direction);
 
     if (event.code === "Space") {
+        gameOverEl.style.display = 'none';
         game.pause();
     }
 
-    if (event.code === 'KeyA') {
+    if (event.code === 'KeyA' && left !== opposite) {
         snake.direction = left;
     }
 
-    if (event.code === 'KeyW') {
+    if (event.code === 'KeyW' && up !== opposite) {
         snake.direction = up;
     }
 
-    if (event.code === 'KeyD') {
+    if (event.code === 'KeyD' && right !== opposite) {
         snake.direction = right;
     }
 
-    if (event.code === 'KeyS') {
+    if (event.code === 'KeyS' && down !== opposite) {
         snake.direction = down;
     }
 
