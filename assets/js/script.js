@@ -5,13 +5,14 @@ const scoreEl = document.querySelector('#score');
 const canvas = document.querySelector('#canvas');
 const ctx = canvas.getContext('2d');
 
-
 let gameTimer;
 
 const left = 'left';
 const right = 'right';
 const up = 'up';
 const down = 'down';
+
+// TODO egg.x and egg.y must be changed and create egg.center
 
 class Snakepart {
     constructor (startx, starty) {
@@ -89,7 +90,7 @@ const game = {
 
     drawEgg: function () {
         ctx.beginPath();
-        ctx.arc(egg.x, egg.y, egg.radius, 0, 2* Math.PI);
+        ctx.arc(egg.centerx, egg.centery, egg.radius, 0, 2* Math.PI);
         ctx.fillStyle = 'green';
         ctx.fill();
         ctx.fillStyle = 'black';
@@ -98,26 +99,32 @@ const game = {
 
     checkBadSpawn: function () {
         if (egg.x === snake.startx && egg.y === snake.starty) {
+            console.log('bad spawn at ' + egg.x, egg.y)
             game.createEgg();
         }
 
         if (snake.length > 1) {
             if (egg.x === Snakepart.snakeparts[Snakepart.snakeparts.length -1].previousx && egg.y === Snakepart.snakeparts[Snakepart.snakeparts.length -1].previousy) {
+                console.log('bad spawn at ' + egg.x, egg.y)
                 game.createEgg();
             }
         }
 
         for (const snakepart of Snakepart.snakeparts) {
             if (egg.x === snakepart.startx && egg.y === snakepart.starty) {
+                console.log('bad spawn at ' + egg.x, egg.y)
                 game.createEgg();
             }
         }
     },
 
     createEgg: function () {
-        egg.x = (Math.floor(Math.random() * ((game.width-20)/snake.width)) * snake.width) + snake.width/2;
-        egg.y = (Math.floor(Math.random() * ((game.height-20)/snake.height)) * snake.height) + snake.height/2;
+        egg.x = Math.floor(Math.random() * ((game.width-20)/egg.width)) * egg.width;
+        egg.y = Math.floor(Math.random() * ((game.height-20)/egg.height)) * egg.height;
+        egg.centerx = egg.x+(egg.width/2)
+        egg.centery = egg.y+(egg.height/2)
         game.checkBadSpawn();
+        game.drawEgg();
         console.log('egg spawned at ' + egg.x, egg.y)
     },
 
@@ -142,6 +149,7 @@ const game = {
             game.score++;
     
             game.removeEgg();
+
             snake.createNewPart();
             
             setTimeout(game.createEgg, 1000);
@@ -155,7 +163,7 @@ const game = {
     loop: function () {
         snake.move(snake.direction);
         Snakepart.move();
-        game.drawEgg();
+
         game.checkState();
     },
 
@@ -192,7 +200,7 @@ const snake = {
     height: 20,
     
     isEating: function () { 
-        return (snake.startx < egg.x && egg.x < snake.startx + snake.width && snake.starty < egg.y && egg.y < snake.starty + snake.height) 
+        return (snake.startx === egg.x && snake.starty === egg.y) 
     },
 
     draw: function () {
@@ -332,7 +340,9 @@ const snake = {
 }
 
 const egg = {
-    radius: snake.width/3
+    radius: snake.width/3,
+    height: snake.height,
+    width: snake.width
 }
 
 canvas.addEventListener('keydown', (event) => {
