@@ -1,0 +1,28 @@
+{
+  "name": "recursnake",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "type": "module",
+  "directories": {
+    "lib": "lib"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/yummy314159265/Recursnake.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/yummy314159265/Recursnake/issues"
+  },
+  "homepage": "https://github.com/yummy314159265/Recursnake#readme",
+  "dependencies": {
+    "chalk": "^5.0.1",
+    "express": "^4.18.0",
+    "jest": "^28.0.1"
+  }
+}
