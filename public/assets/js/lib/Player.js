@@ -1,34 +1,18 @@
-class Player {
-    constructor (x, y, gameWidth, gameHeight) {
-        this.x = x;
-        this.y = y;
-        this.gameWidth = gameWidth;
-        this.gameHeight = gameHeight;
+import { Snake } from './Snake.js'
+
+class Player extends Snake {
+    constructor (x, y, gameWidth, gameHeight, width, height) {
+        super(x, y, gameWidth, gameHeight, width, height);
         this.length = 1;
         this.direction = 'down';
     };
 
-    static width = 20;
-    static height = 20;
-
-    static preX = this.x;
-    static preY = this.y;
+    grow () {
+        this.length++;
+    }
 
     isEating (egg) {
         return (this.x === egg.x && this.y === egg.y);
-    }
-
-    erase (ctx) {
-        ctx.clearRect(this.x, this.y, Player.width, Player.height);
-    }
-
-    draw (ctx) {
-        ctx.fillRect(this.x, this.y, Player.width, Player.height);
-    }
-
-    setPreviousPosition () {
-        Player.preX = this.x;
-        Player.preY = this.y;
     }
 
     hasCollided (x, y) {
@@ -37,6 +21,10 @@ class Player {
         }
 
         return false;
+    }
+
+    setDirection (dir) {
+        this.direction = dir;
     }
 
     oppositeDirection () {
@@ -53,7 +41,7 @@ class Player {
     }
 
     catchBadReverse () {
-        if (this.x === Player.preX && this.y === Player.preY) {
+        if (this.x === this.preX && this.y === this.preY) {
             this.direction = this.oppositeDirection()
 
             switch (this.direction) {

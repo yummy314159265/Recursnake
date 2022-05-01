@@ -1,23 +1,22 @@
-import { Player } from './Player.js'
-
-class Snake extends Player {
-    constructor (x, y, gameWidth, gameHeight) {
-        super(x, y, gameWidth, gameHeight);
-        Snake.snakeparts.push(this);
+class Snake {
+    constructor (x, y, gameWidth, gameHeight, width, height) {
+        this.x = x;
+        this.y = y;
+        this.gameWidth = gameWidth;
+        this.gameHeight = gameHeight;
+        this.width = width;
+        this.height = height;
+        Snake.parts.push(this);
     }
 
-    static snakeparts = [];
+    static parts = [];
 
-    move () {
-        const indexOfThis = Snake.snakeparts.indexOf(this);
+    erase (ctx) {
+        ctx.clearRect(this.x, this.y, this.width, this.height);
+    }
 
-        if (indexOfThis > 0) {
-            this.x = Snake.snakeparts[indexOfThis-1].preX;
-            this.y = Snake.snakeparts[indexOfThis-1].preY;
-        } else {
-            this.x = Player.preX;
-            this.y = Player.preY;
-        }
+    draw (ctx) {
+        ctx.fillRect(this.x, this.y, this.width, this.height);
     }
 
     setPreviousPosition () {
@@ -25,8 +24,9 @@ class Snake extends Player {
         this.preY = this.y;
     }
 
-    static clearSnakeparts () {
-        Snake.snakeparts = [];
+    move (x, y) {
+        this.x = x;
+        this.y = y;
     }
 }
 

@@ -39,20 +39,20 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         const opposite = game.player.oppositeDirection(game.player.direction)
 
-        if (event.code === "KeyW" && 'up' !== opposite) {
-            game.setPlayerDirection('up');
+        if (event.code === "KeyW" && 'up' !== opposite && game.player) {
+            game.player.setDirection('up');
         }
 
-        if (event.code === "KeyS" && 'down' !== opposite) {
-            game.setPlayerDirection('down');
+        if (event.code === "KeyS" && 'down' !== opposite && game.player) {
+            game.player.setDirection('down');
         }
 
-        if (event.code === "KeyA" && 'left' !== opposite) {
-            game.setPlayerDirection('left');
+        if (event.code === "KeyA" && 'left' !== opposite && game.player) {
+            game.player.setDirection('left');
         }
 
-        if (event.code === "KeyD" && 'right' !== opposite) {
-            game.setPlayerDirection('right');
+        if (event.code === "KeyD" && 'right' !== opposite && game.player) {
+            game.player.setDirection('right');
         }
     })
 })

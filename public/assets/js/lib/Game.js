@@ -1,8 +1,6 @@
 import { Player } from './Player.js';
 import { Egg } from './Egg.js';
 import { Snake } from './Snake.js';
-// import * as fs from 'fs/promises';
-// import settings from path.join(__dirname, '..', 'settings.json');
 
 class Game {
     constructor (width, height, ctx) {
@@ -14,11 +12,22 @@ class Game {
         this.started = false;
         this.score = 0;
         this.gameObjects = [];
+        this.box = {
+            width: 20,
+            height: 20
+        }
+    }
+
+    start () {
+        this.started = true;
+        this.spawnPlayer (0, 0);
+        this.spawnEgg();
+        this.run();
     }
 
     run () {
         this.gameTimer = setInterval(() =>  {
-            this.loop()           
+            this.loop();           
         }, 1000/this.fps);
     }
 
@@ -34,54 +43,54 @@ class Game {
 
     pause () {
         if (this.gameTimer) {
-            clearInterval(this.gameTimer);
+            this.stopTimer();
         }
     }
 
-    gameOver () {
+    stopTimer () {
         clearInterval(this.gameTimer);
-        Snake.clearSnakeparts();
+    }
+
+    gameOver () {
+        this.stopTimer();
         this.clearObjects();
         this.restart();
         this.clearScreen();
         this.clearScore();
     }
 
-    filterObj (filteredObj) {
-        return this.gameObjects.filter(obj => !(obj instanceof filteredObj));
+    checkCollision (player, objArray) {
+        let collided = false;
+        objArray.forEach(obj => {
+            console.log(obj, player)
+
+            if (obj === player) {
+                return;
+            }
+
+            if (player.hasCollided(obj.x, obj.y)) {
+                collided = true;
+            }
+        });
+
+        return collided;
     }
 
     checkState () {
         if(this.player.isEating(this.egg)){
-            this.gameObjects = this.filterObj(Egg);
             this.playerScored();
 
-            this.egg = new Egg(Player.width, Player.height, this.width, this.height);
+            this.player.grow();
 
-            while (this.egg.checkBadSpawn()) {
-                this.egg = new Egg(Player.width, Player.height, this.width, this.height);
-            };
+            this.destroyEgg();
+            setTimeout(() => this.spawnEgg(), 1000);
 
-            this.gameObjects.push(this.egg);
-
-            if (Snake.snakeparts.length === 0) {
-                this.gameObjects.push(new Snake(Player.preX, Player.preY, this.width, this.height));
-            } else {
-                let preX = Snake.snakeparts[Snake.snakeparts.length-1].preX;
-                let preY = Snake.snakeparts[Snake.snakeparts.length-1].preY;
-                this.gameObjects.push(new Snake(preX, preY, this.width, this.height));
-            }
+            this.spawnSnake();
         }
 
-        Snake.snakeparts.forEach(snakepart => {
-            if (this.player.hasCollided(snakepart.x, snakepart.y)){
-                this.gameOver();
-            }
-        })
-    }
-
-    setPlayerDirection (dir) {
-        this.player.direction = dir;
+        if (this.checkCollision(this.player, Snake.parts.filter(part => part !== this.player))) {
+            this.gameOver();
+        }
     }
 
     restart () {
@@ -90,18 +99,21 @@ class Game {
 
     loop () {
         this.gameObjects.forEach(obj => {
-
-            if (obj instanceof Snake || obj instanceof Player) {
+            if (obj instanceof Player) {
                 obj.setPreviousPosition();
-            }
-
-            obj.erase(this.ctx);
-
-            if(obj instanceof Snake || obj instanceof Player) {
+                obj.erase(this.ctx);
                 obj.move();
+                obj.draw(this.ctx);
+            } else if (obj instanceof Snake) {
+                obj.setPreviousPosition();
+                obj.erase(this.ctx);
+                let index = Snake.parts.indexOf(obj)
+                obj.move(Snake.parts[index-1].preX, Snake.parts[index-1].preY);
+                obj.draw(this.ctx);
+            } else if (obj instanceof Egg) {
+                obj.erase(this.ctx);
+                obj.draw(this.ctx);
             }
-
-            obj.draw(this.ctx);
         });
 
         this.checkState();
@@ -123,13 +135,34 @@ class Game {
         this.ctx.clearRect(0, 0, this.width, this.height);
     }
 
-    start () {
-        this.started = true;
-        this.player = new Player(0, 0, this.width, this.height);
-        this.egg = new Egg(Player.width, Player.height, this.width, this.height);
+    removeObj (obj) {
+        return this.gameObjects.filter(gameObj => gameObj !== obj);
+    }
+
+    spawnPlayer (x, y) {
+        this.player = new Player(x, y, this.width, this.height, this.box.width, this.box.height);
         this.gameObjects.push(this.player);
+    }
+
+    spawnEgg () {
+        this.egg = new Egg(this.box.width, this.box.height, this.width, this.height);
+
+        while (this.egg.checkBadSpawn(Snake.parts)) {
+            this.egg = new Egg(this.box.width, this.box.height, this.width, this.height);
+        };
+
         this.gameObjects.push(this.egg);
-        this.run();
+    }
+
+    destroyEgg () {
+        this.gameObjects = this.removeObj(this.egg);
+        this.egg.remove();
+    }
+
+    spawnSnake () {
+        let preX = Snake.parts[Snake.parts.length-1].preX;
+        let preY = Snake.parts[Snake.parts.length-1].preY;
+        this.gameObjects.push(new Snake(preX, preY, this.width, this.height, this.box.width, this.box.height));
     }
 }
 
